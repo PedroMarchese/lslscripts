@@ -1,10 +1,18 @@
 // CONSTANTS
 integer LISTEN_CHANNEL = 0;
 integer EMOJI_SIDE = 2;
+string EMOJI_SOUND = "trigger_emoji_sound";
 
 // STATES
 integer listenHandle;
 integer emojiCollision = 0;
+
+llTurnParticleSystem(integer state) {
+    if (state)
+        llLinkParticleSystem(1, []);
+    else
+        llLinkParticleSystem(1, []);
+}
 
 default
 {
@@ -13,16 +21,35 @@ default
     }
     
     listen(integer channel, string name, key id, string message) {
-        // IF BUMPER FUNCTION IS ON
-        if (message == "on")
-            return emojiCollision = 1;
+        if (message == "bumper on") {
+            // Change bumper function to online mode and alpha to 0.0
+            llSetLinkAlpha(1, 0.0, EMOJI_SIDE);
 
-        // IF BUMPER FUNCTION IS OFF
-        else if (message == "off")
-            return emojiCollision = 0;
+            emojiCollision = 1;
+            return;
+        }
+        else if (message == "bumper off") {
+            // If bumper function is off
+            emojiCollision = 0;
+            return;
+        }
+        else if (message == "emoji on") {
+            // Turn off bumper function and activate emoji
+            emojiCollision = 0;
+
+            llSetLinkAlpha(1, 1.0, EMOJI_SIDE);
+            return;
+        }
+        else if (message == "emoji off") {
+            // Deactivate emoji
+            emojiCollision = 0;
+
+            llSetLinkAlpha(1, 0.0, EMOJI_SIDE);
+            return;
+        }
 
         // EMOJI CASES
-        llSetPrimitiveParams(1, [PRIM_TEXTURE, EMOJI_SIDE, message]);
+        llSetPrimitiveParams(1, [ PRIM_TEXTURE, EMOJI_SIDE, message ]);
     }
     
     // Check if bumper function is on and make it bumps 
@@ -30,10 +57,11 @@ default
         if (!emojiCollision)
             return;
  
-        // Trigger the emoji alpha
-        llSetAlpha(1.0, EMOJI_SIDE);
+        // Trigger the emoji sound effect & alpha
+        llTriggerSound(EMOJI_SOUND, 1.0);
+        llSetLinkAlpha(1, 1.0, EMOJI_SIDE);
         llSleep(1.5);
-        llSetAlpha(0.0, EMOJI_SIDE);
+        llSetLinkAlpha(1, 0.0, EMOJI_SIDE);
     }
 
     attach(key id) {
